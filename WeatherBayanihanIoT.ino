@@ -18,16 +18,16 @@
 #define global_PIN_SCL 5                          //scl - D1 = 5 (Default) or D5 = 14 (Custom)
 #define global_PIN_SDA 4                          //sda - D2 = 4 (Default) or D6 = 12 (Custom)
 
-#define global_wifi_enabled false                  //true
+#define global_wifi_enabled true                  //true
 #define global_wifi_blocking_delay 3000           //3000
 #define global_wifi_nonblocking_interval 3000     //3000
-#define global_wifi_enablereconfiguration false    //true
+#define global_wifi_enablereconfiguration true    //true
 #define global_wifilcd_nonblocking_interval 15000 //15000
 #define global_lcd_enabled true                   //true
 #define global_sensor_enabled true                //true
 #define global_sensor_blocking_delay 3000         //3000
 #define global_sensor_nonblocking_interval 15000  //15000
-#define global_http_enabled false
+#define global_http_enabled true
 #define global_http_blocking_delay 3000
 #define global_http_nonblocking_interval 1800000  //15000
                                                   //1800000 // <-- 30 Mins
@@ -48,30 +48,23 @@ void setup() {
   serialLogger.Out("+ Global Setup Started!");
 
   simpleLCDManager.ConfigureLogging(serialLogger);
-  simpleLCDManager.Begin(global_projectName, global_lcd_enabled);
-  simpleLCDManager.PrintText(1, global_projectName);
-  simpleLCDManager.PrintText(2, "Starting..");
-  simpleLCDManager.PrintIcon(2, 5);
+  simpleLCDManager.Begin(global_projectName, global_PIN_SCL, global_PIN_SDA, global_lcd_enabled);
+  simpleLCDManager.PrintText(2, global_projectName);
+  simpleLCDManager.PrintIcon(0, 5);
 
-    
-  simpleLCDManager.PrintText(2, "Starting WiFi.. ");
   simpleWifiManager.ConfigureLogging(serialLogger);
   simpleWifiManager.ConfigureDelays(global_wifi_blocking_delay, global_wifi_nonblocking_interval);
   simpleWifiManager.ConfigureProjectName(global_projectName);
   simpleWifiManager.ConfigureWiFiReconfiguration(global_wifi_enablereconfiguration);
   simpleWifiManager.Begin(global_wifi_enabled);
 
-  simpleLCDManager.PrintText(2, "Starting Sensors.. ");
   sensorManager.ConfigureLogging(serialLogger);
-  sensorManager.Begin(global_sensor_enabled);
+  sensorManager.Begin(global_PIN_SCL, global_PIN_SDA, global_sensor_enabled);
 
-  simpleLCDManager.PrintText(2, "Starting IoT.. ");
   httpManager.ConfigureLogging(serialLogger);
   httpManager.Begin(global_http_enabled);
 
-  simpleLCDManager.ClearRow(1);
-  simpleLCDManager.ClearRow(2);
-  simpleLCDManager.ClearRow(3);
+  simpleLCDManager.ClearScreen();
   serialLogger.Out("- Setup Complete!");
 
   ProcessSensors();
@@ -94,7 +87,7 @@ void loop() {
 
     simpleLCDManager.PrintText(0, simpleWifiManager.CheckConnectionName());
     simpleLCDManager.PrintIcon(0, simpleWifiManager.CheckConnection() ? 1 : 2);
-  }
+  } 
 
   if (sensor_loopCurrentTime - sensor_loopPreviousTime > global_sensor_nonblocking_interval) {
     sensor_loopPreviousTime = sensor_loopCurrentTime;

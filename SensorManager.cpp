@@ -10,8 +10,7 @@
 #define BMP_PIN_CSB 13      //csb - D7
 #define BMP_PIN_SDO 15      //sdo - D8
 #define BME_ADDR_I2C 0x76   //0x76
-#define BME_PIN_SCL 5       //scl - D5 = 14, D1 = 5
-#define BME_PIN_SDA 4       //sda - D6 = 12, D2 = 4
+
 #define DHT_ENABLED false   //! IMPORTANT !- TOGGLE DHT because D1 pin to be used by LCD
 #define BMP_ENABLED false   //! IMPORTANT !- TOGGLE BMP and BME because of the SCL and SDA PINS on D5 and D6 respectively
 #define BME_ENABLED true    //! IMPORTANT !- TOGGLE BMP and BME because of the SCL and SDA PINS on D5 and D6 respectively
@@ -25,26 +24,29 @@ Adafruit_BME280 bmeSensor;                                                      
 //https://links2004.github.io/Arduino/d9/d4b/class_two_wire.html#a4c7daf378c06e5e72762e1bd3d5937b6
 TwoWire BME_I2C_TWOWIRE;    //Example of using another instance of WIRE to utilize other PINS.
 
-void SensorManager::Begin(boolean enabled) {
+void SensorManager::Begin(int sclPIN, int sdaPIN, boolean enabled) {
   _enabled = enabled;
+  _sclPIN = sclPIN;
+  _sdaPIN = sdaPIN;
+
   smSerial.Out("+ SensorManager ");
   if (!_enabled) {
     return;
   }
   
   smSerial.Out("- SensorManager Starting....");
-  smSerial.Out("--- SensorManager _enabled", (_enabled ? "ENABLED" : "DISABLED"));
+  smSerial.Out("--- SensorManager _enabled", _enabled ? "ENABLED" : "DISABLED");
   smSerial.Out("--- SensorManager DHT_PIN_SENSOR", DHT_PIN_SENSOR);
   smSerial.Out("--- SensorManager BMP_PIN_SCL", BMP_PIN_SCL);
   smSerial.Out("--- SensorManager BMP_PIN_SDA", BMP_PIN_SDA);
   smSerial.Out("--- SensorManager BMP_PIN_CSB", BMP_PIN_CSB);
   smSerial.Out("--- SensorManager BMP_PIN_SDO", BMP_PIN_SDO);
   smSerial.Out("--- SensorManager BME_ADDR_I2C", BME_ADDR_I2C);
-  smSerial.Out("--- SensorManager BME_PIN_SCL", BME_PIN_SCL);
-  smSerial.Out("--- SensorManager BME_PIN_SDA", BME_PIN_SDA);
-  smSerial.Out("--- SensorManager DHT_ENABLED", (DHT_ENABLED ? "ENABLED" : "DISABLED"));
-  smSerial.Out("--- SensorManager BMP_ENABLED", (BMP_ENABLED ? "ENABLED" : "DISABLED"));
-  smSerial.Out("--- SensorManager BME_ENABLED", (BME_ENABLED ? "ENABLED" : "DISABLED"));
+  smSerial.Out("--- SensorManager sclPIN", _sclPIN);
+  smSerial.Out("--- SensorManager sdaPIN", _sdaPIN);
+  smSerial.Out("--- SensorManager DHT_ENABLED", DHT_ENABLED ? "ENABLED" : "DISABLED");
+  smSerial.Out("--- SensorManager BMP_ENABLED", BMP_ENABLED ? "ENABLED" : "DISABLED");
+  smSerial.Out("--- SensorManager BME_ENABLED", BME_ENABLED ? "ENABLED" : "DISABLED");
 
   if (BMP_ENABLED) { //IF USE BMP
     if (!bmpSensor.begin()) {
@@ -56,7 +58,7 @@ void SensorManager::Begin(boolean enabled) {
 
   if (BME_ENABLED) {
     BME_I2C_TWOWIRE = TwoWire();
-    BME_I2C_TWOWIRE.begin(BME_PIN_SDA, BME_PIN_SCL, 100000);
+    BME_I2C_TWOWIRE.begin(_sdaPIN, _sclPIN, 100000);
     if (!bmeSensor.begin(BME_ADDR_I2C, &BME_I2C_TWOWIRE)) { //IF USE BME
       smSerial.Out("-- SensorManager bmeSensor: Error - Could not find a valid BME sensor");
     } else {

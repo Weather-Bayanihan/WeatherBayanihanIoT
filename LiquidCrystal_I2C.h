@@ -73,7 +73,7 @@ public:
   /**
    * Set the LCD display in the correct begin state, must be called before anything else is done.
    */
-  void begin();
+  void begin(int sclPIN = -1, int sdaPIN = - 1);
 
    /**
     * Remove all the characters currently shown. Next print/write operation will start
@@ -160,6 +160,9 @@ private:
   uint8_t _rows;
   uint8_t _charsize;
   uint8_t _backlightval;
+
+  int _sclPIN;
+  int _sdaPIN;
 };
 
 #endif // FDB_LIQUID_CRYSTAL_I2C_H

@@ -6,7 +6,7 @@
 
 class SensorManager {
   public:
-    void Begin(boolean enabled = true);
+    void Begin(int sclPIN, int sdaPIN, boolean enabled = true);
     void ProcessSensors();
     void ConfigureLogging(ConfigurableSerial configurableSerial);
     boolean Initialized = false;
@@ -17,6 +17,8 @@ class SensorManager {
   private:
     String _prefix;
     boolean _enabled;
+    int _sclPIN;
+    int _sdaPIN;
 };
 
 #endif

@@ -33,9 +33,18 @@ LiquidCrystal_I2C::LiquidCrystal_I2C(uint8_t lcd_addr, uint8_t lcd_cols, uint8_t
   _backlightval = LCD_BACKLIGHT;
 }
 
-void LiquidCrystal_I2C::begin() {
-  Wire.begin(); // DEFAULT/////
-  //Wire.begin(4, 5);
+void LiquidCrystal_I2C::begin(int sclPIN, int sdaPIN) {
+  //Wire.begin(); // DEFAULT OF LIBRARY, Added defaults for SCL and SDA.
+
+  if(sclPIN == -1 || sdaPIN == -1){
+    Wire.begin();
+  }
+  else {
+    _sclPIN = sclPIN;
+    _sdaPIN = sdaPIN;
+    
+    Wire.begin(_sdaPIN, _sclPIN);
+  }
   
   _displayfunction = LCD_4BITMODE | LCD_1LINE | LCD_5x8DOTS;
 

@@ -7,17 +7,20 @@
 
 class SimpleLCDManager {
   public:
-    void Begin(String prefix, boolean enabled);
+    void Begin(String prefix, int sclPIN, int sdaPIN, boolean enabled);
     void ConfigureLogging(ConfigurableSerial configurableSerial);
     void PrintText(int row, String input);
     void PrintText(int row, String input1, String input2);
     void PrintText(int row, String input1, double input2);
     void ClearRow(int row);
     void PrintIcon(int row, int iconId);
+    void ClearScreen();
   private:
     boolean _enabled;
     String _prefix;
-
+    int _sclPIN;
+    int _sdaPIN;
+    
     //Credits to https://maxpromer.github.io/LCD-Character-Creator/
     byte customChar_wiFi[8] = {0x01, 0x01, 0x03, 0x03, 0x07, 0x07, 0x0F, 0x1F};
     byte customChar_wiFi_notConnected[8]  = {0x11, 0x0A, 0x04, 0x0A, 0x11, 0x04, 0x0C, 0x1C};
