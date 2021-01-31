@@ -55,7 +55,7 @@ void ConfigurableSerial::Out(String input, double dinput) {
 }
 
 void ConfigurableSerial::Out(String input, String sinput) {
-  if (_enabled) {
+  if (_enabled && Initialized) {
     Out(input + " : " + sinput, true);
   }
 }

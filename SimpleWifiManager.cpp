@@ -11,55 +11,56 @@ ConfigurableSerial cSerial;
 void SimpleWifiManager::Begin(boolean enabled) {
   _enabled = enabled;
 
-  if (!cSerial.Initialized) {
-    cSerial.Begin(global_projectName, global_serial_baud, global_serial_loggingEnabled);
+  if (_enabled) {
+
+    if (!cSerial.Initialized) {
+      cSerial.Begin(global_projectName, global_serial_baud, global_serial_loggingEnabled);
+    }
+    cSerial.Out("+ SimpleWifiManager");
+    cSerial.Out("--- Begin - Configuration");
+    cSerial.Out("---- Begin - Configuration global_standardDelay", global_standardDelay);
+    cSerial.Out("---- Begin - Configuration global_processConnections_loop_interval", global_processConnections_loop_interval);
+    cSerial.Out("---- Begin - Configuration global_wifi_ReconfigurationEnabled", String(global_wifi_ReconfigurationEnabled));
+
+    cSerial.Out("--- Begin - SPIFFS Started");
+    SPIFFS.begin();
+    cSerial.Out("---- Begin - SPIFFS Done");
+
+    cSerial.Out("--- Begin - Act as an access point (AP)");
+    wifiResetSoftAp(false);
+
+    cSerial.Out("--- Begin - Name Server start (DNS)");
+    dnsServer.setErrorReplyCode(DNSReplyCode::NoError);
+    dnsServer.start(53, "*", WiFi.softAPIP());
+    delay(global_standardDelay);
+
+    cSerial.Out("--- Start - Web Server start");
+
+    //c-unresolved-overloaded-function-type
+    //https://stackoverflow.com/questions/39803135/c-unresolved-overloaded-function-type
+    webServer.on("/", [this]() {
+      onWebServerMainPage();
+    });
+    webServer.on("/refresh", [this]() {
+      onWebServerMainPage();
+    });
+    webServer.on("/connect", [this]() {
+      onWebServerConnectPage();
+    });
+    webServer.onNotFound([this]() {
+      onWebServerNotFoundPage();
+    });
+    webServer.on("/change", [this]() {
+      onWebServerChangePage();
+    });
+    webServer.on("/station", [this]() {
+      onWebServerStationPage();
+    });
+    webServer.begin();
+    delay(global_standardDelay);
+
+    cSerial.Out("-- Start Complete, Server ready");
   }
-
-  cSerial.Out("-- Start");
-
-  cSerial.Out("--- Start - Configuration");
-  cSerial.Out("---- Start - Configuration global_standardDelay", global_standardDelay);
-  cSerial.Out("---- Start - Configuration global_processConnections_loop_interval", global_processConnections_loop_interval);
-  cSerial.Out("---- Start - Configuration global_wifi_ReconfigurationEnabled", String(global_wifi_ReconfigurationEnabled));
-
-  cSerial.Out("--- Start - SPIFFS Started");
-  SPIFFS.begin();
-  cSerial.Out("---- Start - SPIFFS Done");
-
-  cSerial.Out("--- Start - Act as an access point (AP)");
-  wifiResetSoftAp(false);
-
-  cSerial.Out("--- Start - Name Server start (DNS)");
-  dnsServer.setErrorReplyCode(DNSReplyCode::NoError);
-  dnsServer.start(53, "*", WiFi.softAPIP());
-  delay(global_standardDelay);
-
-  cSerial.Out("--- Start - Web Server start");
-
-  //c-unresolved-overloaded-function-type
-  //https://stackoverflow.com/questions/39803135/c-unresolved-overloaded-function-type
-  webServer.on("/", [this]() {
-    onWebServerMainPage();
-  });
-  webServer.on("/refresh", [this]() {
-    onWebServerMainPage();
-  });
-  webServer.on("/connect", [this]() {
-    onWebServerConnectPage();
-  });
-  webServer.onNotFound([this]() {
-    onWebServerNotFoundPage();
-  });
-  webServer.on("/change", [this]() {
-    onWebServerChangePage();
-  });
-  webServer.on("/station", [this]() {
-    onWebServerStationPage();
-  });
-  webServer.begin();
-  delay(global_standardDelay);
-
-  cSerial.Out("-- Start Complete, Server ready");
 }
 
 //// https://www.arduino.cc/reference/en/language/functions/time/delay/
@@ -68,7 +69,7 @@ long processConnections_loop_previousTime = 0;
 
 void SimpleWifiManager::ProcessConnections() {
   if (!_enabled) {
-    cSerial.Out("-- SimpleWifiManager Not Enabled");
+    //cSerial.Out("-- SimpleWifiManager Not Enabled");
     return;
   }
 
@@ -115,6 +116,10 @@ void SimpleWifiManager::ConfigureLogging(ConfigurableSerial configurableSerial) 
 }
 
 boolean SimpleWifiManager::CheckConnection() {
+   if (!_enabled) {
+     return false;
+  }
+  
   cSerial.Out("-- CheckConnection");
   if (WiFi.status() == WL_CONNECTED) {
     cSerial.Out("-- CheckConnection - Connected");
@@ -127,6 +132,9 @@ boolean SimpleWifiManager::CheckConnection() {
 }
 
 String SimpleWifiManager::CheckConnectionName() {
+  if (!_enabled) {
+     return "";
+  }
   cSerial.Out("-- CheckConnectionName");
   cSerial.Out("-- CheckConnectionName - Expected", wiFi_ap_ssid);
   return WiFi.SSID();
@@ -221,20 +229,20 @@ void SimpleWifiManager::onWebServerStationPage() {
     wiFi_ap_ssid = webServer.arg("stationName");
     wiFi_ap_passkey = webServer.arg("password");
     wiFi_station_id = webServer.arg("stationId");
-    
+
     cSerial.Out("-- onWebServerStationPage - wifiConfigurationSave");
     cSerial.Out("-- onWebServerStationPage - new wiFi_ap_ssid: ", wiFi_ap_ssid);
     cSerial.Out("-- onWebServerStationPage - new wiFi_station_id: ", wiFi_station_id);
-    
+
     wifiConfigurationSave();
-    webServerRedirectToHome(); //<EXPERIMENTAL> REDIRECT FIRST THEN SAVE. 
+    webServerRedirectToHome(); //<EXPERIMENTAL> REDIRECT FIRST THEN SAVE.
 
     cSerial.Out("-- onWebServerStationPage - wifiResetSoftAp");
     wifiResetSoftAp(true);
     cSerial.Out("-- onWebServerStationPage - webServerRedirectToHome");
 
     //webServerRedirectToHome();
-    
+
   }
   else {
     onWebServerNotFoundPage();
@@ -394,7 +402,7 @@ void SimpleWifiManager::wifiConfigurationRead() {
   wiFi_ap_ssid = spiffsConfigurationRead(spiffs_Configuration_ap_ssid, wiFi_ap_ssid);
   wiFi_ap_passkey = spiffsConfigurationRead(spiffs_Configuration_ap_passkey, wiFi_ap_passkey);
   wiFi_station_id = spiffsConfigurationRead(spiffs_Configuration_station_id, wiFi_station_id);
-  
+
 }
 
 String SimpleWifiManager::spiffsConfigurationRead(String source, String defaultvalue) {
@@ -416,7 +424,7 @@ String SimpleWifiManager::spiffsConfigurationRead(String source, String defaultv
   return outPut;
 }
 
-String SimpleWifiManager::GetStationId(){
+String SimpleWifiManager::GetStationId() {
   cSerial.Out("-- GetStationId");
   wiFi_station_id = spiffsConfigurationRead(spiffs_Configuration_station_id, wiFi_station_id);
   cSerial.Out("-- GetStationId wiFi_station_id : ", wiFi_station_id);

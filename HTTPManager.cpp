@@ -6,7 +6,7 @@ ConfigurableSerial httpSerial;
 
 void HTTPManager::Begin(boolean enabled) {
   _enabled = enabled;
-  httpSerial.Out("-- HTTPManager ");
+  httpSerial.Out("+ HTTPManager ");
   httpSerial.Out("--- HTTPManager _enabled", _enabled);
 }
 

@@ -1,5 +1,6 @@
 //// Weather, Humidity, Temperature, Arduino, LCD, IoT, ESP8266
 //// https://www.weather-bayanihan.ph/
+//// https://github.com/weather-bayanihan
 //// by tulungan[@]weather-bayanihan.ph
 
 #include "Arduino.h"
@@ -13,20 +14,25 @@
 #define global_projectName "WeatherBayanihanIoT"  //WeatherBayanihanIoT
 #define global_serial_loggingEnabled true         //true
 #define global_serial_loggingRate 115200          //115200 or 9600
-#define global_wifi_enabled true                  //true
+
+#define global_PIN_SCL 5                          //scl - D1 = 5 (Default) or D5 = 14 (Custom)
+#define global_PIN_SDA 4                          //sda - D2 = 4 (Default) or D6 = 12 (Custom)
+
+#define global_wifi_enabled false                  //true
 #define global_wifi_blocking_delay 3000           //3000
 #define global_wifi_nonblocking_interval 3000     //3000
-#define global_wifi_enablereconfiguration true    //true
+#define global_wifi_enablereconfiguration false    //true
 #define global_wifilcd_nonblocking_interval 15000 //15000
 #define global_lcd_enabled true                   //true
 #define global_sensor_enabled true                //true
 #define global_sensor_blocking_delay 3000         //3000
 #define global_sensor_nonblocking_interval 15000  //15000
-#define global_http_enabled true
+#define global_http_enabled false
 #define global_http_blocking_delay 3000
 #define global_http_nonblocking_interval 1800000  //15000
                                                   //1800000 // <-- 30 Mins
                                                   //3600000 // <-- 60 Mins
+                                                  
 #define global_http_sslFingerPrint "F2:D3:FE:3C:D0:0C:8C:B9:D9:CF:91:1A:8E:33:87:A0:0D:42:49:50"
 #define global_http_serverAddress "https://api.weather-bayanihan.ph/api/v1.0/Weather"
 
@@ -38,26 +44,33 @@ HTTPManager httpManager;
 
 void setup() {
   serialLogger.Begin(global_projectName, global_serial_loggingRate, global_serial_loggingEnabled);
+  serialLogger.Out(global_projectName);
   serialLogger.Out("+ Global Setup Started!");
 
+  simpleLCDManager.ConfigureLogging(serialLogger);
+  simpleLCDManager.Begin(global_projectName, global_lcd_enabled);
+  simpleLCDManager.PrintText(1, global_projectName);
+  simpleLCDManager.PrintText(2, "Starting..");
+  simpleLCDManager.PrintIcon(2, 5);
+
+    
+  simpleLCDManager.PrintText(2, "Starting WiFi.. ");
   simpleWifiManager.ConfigureLogging(serialLogger);
   simpleWifiManager.ConfigureDelays(global_wifi_blocking_delay, global_wifi_nonblocking_interval);
   simpleWifiManager.ConfigureProjectName(global_projectName);
   simpleWifiManager.ConfigureWiFiReconfiguration(global_wifi_enablereconfiguration);
   simpleWifiManager.Begin(global_wifi_enabled);
 
-  simpleLCDManager.ConfigureLogging(serialLogger);
-  simpleLCDManager.Begin(global_projectName, global_lcd_enabled);
-  simpleLCDManager.PrintText(3, global_projectName);
-  simpleLCDManager.PrintIcon(3, 5);
-
+  simpleLCDManager.PrintText(2, "Starting Sensors.. ");
   sensorManager.ConfigureLogging(serialLogger);
   sensorManager.Begin(global_sensor_enabled);
-  sensorManager.ProcessSensors();
 
+  simpleLCDManager.PrintText(2, "Starting IoT.. ");
   httpManager.ConfigureLogging(serialLogger);
   httpManager.Begin(global_http_enabled);
 
+  simpleLCDManager.ClearRow(1);
+  simpleLCDManager.ClearRow(2);
   simpleLCDManager.ClearRow(3);
   serialLogger.Out("- Setup Complete!");
 
