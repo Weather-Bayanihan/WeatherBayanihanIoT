@@ -9,7 +9,7 @@
 #include "SimpleWifiManager.h"
 #include "SimpleLCDManager.h"
 #include "SensorManager.h"
-#include "HTTPManager.h"
+#include "WeatherBayanihanIoTClientManager.h"
 
 #define global_projectName "WeatherBayanihanIoT"  //WeatherBayanihanIoT
 #define global_serial_loggingEnabled true         //true
@@ -29,18 +29,13 @@
 #define global_sensor_nonblocking_interval 15000  //15000
 #define global_http_enabled true
 #define global_http_blocking_delay 3000
-#define global_http_nonblocking_interval 1800000  //15000
-                                                  //1800000 // <-- 30 Mins
-                                                  //3600000 // <-- 60 Mins
-                                                  
-#define global_http_sslFingerPrint "F2:D3:FE:3C:D0:0C:8C:B9:D9:CF:91:1A:8E:33:87:A0:0D:42:49:50"
-#define global_http_serverAddress "https://api.weather-bayanihan.ph/api/v1.0/Weather"
+#define global_http_nonblocking_interval 1800000  //15000, 1800000 = 30 Mins, 3600000 = 60 Mins
 
 ConfigurableSerial serialLogger;
 SimpleWifiManager simpleWifiManager;
 SimpleLCDManager simpleLCDManager;
 SensorManager sensorManager;
-HTTPManager httpManager;
+WeatherBayanihanIoTClientManager weatherBayanihanIoTClientManager;
 
 void setup() {
   serialLogger.Begin(global_projectName, global_serial_loggingRate, global_serial_loggingEnabled);
@@ -61,8 +56,8 @@ void setup() {
   sensorManager.ConfigureLogging(serialLogger);
   sensorManager.Begin(global_PIN_SCL, global_PIN_SDA, global_sensor_enabled);
 
-  httpManager.ConfigureLogging(serialLogger);
-  httpManager.Begin(global_http_enabled);
+  weatherBayanihanIoTClientManager.ConfigureLogging(serialLogger);
+  weatherBayanihanIoTClientManager.Begin(global_http_enabled);
 
   simpleLCDManager.ClearScreen();
   serialLogger.Out("- Setup Complete!");
@@ -87,28 +82,30 @@ void loop() {
 
     simpleLCDManager.PrintText(0, simpleWifiManager.CheckConnectionName());
     simpleLCDManager.PrintIcon(0, simpleWifiManager.CheckConnection() ? 1 : 2);
-  } 
+  }
 
   if (sensor_loopCurrentTime - sensor_loopPreviousTime > global_sensor_nonblocking_interval) {
     sensor_loopPreviousTime = sensor_loopCurrentTime;
-    
+
     ProcessSensors();
-    
+
   }
 
   if (http_loopCurrentTime - http_loopPreviousTime > global_http_nonblocking_interval) {
     http_loopPreviousTime = http_loopCurrentTime;
     if (simpleWifiManager.CheckConnection() && sensorManager.CheckSensors()) {
-      httpManager.ConfigureClient(global_http_serverAddress, global_http_sslFingerPrint);
-
       String http_device_stationId = simpleWifiManager.GetStationId();
-      if(http_device_stationId != "") {
-        String http_manager_payload = "{  \"at\": " + String(sensorManager.Temperature) + ", \"ap\": " + String(sensorManager.Pressure) + ", \"rh\": " + String(sensorManager.Humidity) + ", \"deviceId\": \"" + String(http_device_stationId) + "\" }";
-        boolean http_manager_response = httpManager.Send(http_manager_payload);
+      if (http_device_stationId != "") {
+
+        String _temperature = String(sensorManager.Temperature);
+        String _pressure = String(sensorManager.Pressure);
+        String _humidity = String(sensorManager.Humidity);
+        
+        boolean http_manager_response = weatherBayanihanIoTClientManager.Send(http_device_stationId, _temperature , _pressure , _humidity);
       }
-     else {
+      else {
         serialLogger.Out("- http_device_stationId is not yet configured. Skipping Sending");
-      } 
+      }
     }
     else {
       serialLogger.Out("- Connection is out or Sensors are out. Skipping Sending");
