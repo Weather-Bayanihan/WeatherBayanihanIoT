@@ -1,6 +1,8 @@
-//// Weather, Humidity, Temperature, Arduino, LCD, IoT, ESP8266
+//// Weather Bayanihan
+//// Humidity, Temperature, Pressure, Arduino, IoT, ESP8266
 //// https://www.weather-bayanihan.ph/
 //// https://github.com/weather-bayanihan
+//// https://www.facebook.com/WeatherBayanihan
 //// by tulungan[@]weather-bayanihan.ph
 
 #include "Arduino.h"
@@ -29,13 +31,18 @@
 #define global_sensor_nonblocking_interval 15000  //15000
 #define global_http_enabled true
 #define global_http_blocking_delay 3000
-#define global_http_nonblocking_interval 1800000  //15000, 1800000 = 30 Mins, 3600000 = 60 Mins
+#define global_http_nonblocking_interval 1800000  //15000 = 15 Secs (Debug), 1800000 = 30 Mins, 3600000 = 60 Mins
 
 ConfigurableSerial serialLogger;
 SimpleWifiManager simpleWifiManager;
 SimpleLCDManager simpleLCDManager;
 SensorManager sensorManager;
 WeatherBayanihanIoTClientManager weatherBayanihanIoTClientManager;
+
+long wifi_loopPreviousTime = 0;
+long sensor_loopPreviousTime = 0;
+long http_loopPreviousTime = 0;
+
 
 void setup() {
   serialLogger.Begin(global_projectName, global_serial_loggingRate, global_serial_loggingEnabled);
@@ -65,9 +72,6 @@ void setup() {
   ProcessSensors();
 }
 
-long wifi_loopPreviousTime = 0;
-long sensor_loopPreviousTime = 0;
-long http_loopPreviousTime = 0;
 
 void loop() {
 
