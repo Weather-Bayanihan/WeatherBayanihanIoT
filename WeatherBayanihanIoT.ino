@@ -15,7 +15,7 @@
 
 #define global_projectName "WeatherBayanihanIoT"  //WeatherBayanihanIoT
 #define global_serial_loggingEnabled true         //true
-#define global_serial_loggingRate 115200          //115200 or 9600
+#define global_serial_loggingRate 115200          //115200 or 9600 (ESP8266 vs ARDUINO UNO/ETC)
 
 #define global_PIN_SCL 5                          //scl - D1 = 5 (Default) or D5 = 14 (Custom)
 #define global_PIN_SDA 4                          //sda - D2 = 4 (Default) or D6 = 12 (Custom)
@@ -25,13 +25,14 @@
 #define global_wifi_nonblocking_interval 3000     //3000
 #define global_wifi_enablereconfiguration true    //true
 #define global_wifilcd_nonblocking_interval 15000 //15000
-#define global_lcd_enabled true                   //true
+#define global_lcd_enabled false                  //true
 #define global_sensor_enabled true                //true
 #define global_sensor_blocking_delay 3000         //3000
 #define global_sensor_nonblocking_interval 15000  //15000
-#define global_http_enabled true
+#define global_http_enabled true                  //ALLOW IOT TO SEND
 #define global_http_blocking_delay 3000
 #define global_http_nonblocking_interval 1800000  //15000 = 15 Secs (Debug), 1800000 = 30 Mins, 3600000 = 60 Mins
+                                                  //RATE OF SENDING VIA IOT
 
 ConfigurableSerial serialLogger;
 SimpleWifiManager simpleWifiManager;

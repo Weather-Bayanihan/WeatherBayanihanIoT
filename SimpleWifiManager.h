@@ -37,7 +37,7 @@ class SimpleWifiManager {
 
     String wiFi_station_id = "";
     
-    String wiFi_ap_ssid = "IoT Device 1";
+    String wiFi_ap_ssid = "IoT Device N";
     String wiFi_ap_passkey = "hello123";
     IPAddress wiFi_ap_initial_IPAddress = IPAddress(11, 1, 1, 1);
     IPAddress wiFi_ap_initial_Gateway = IPAddress(11, 1, 1, 1);

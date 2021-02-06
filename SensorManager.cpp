@@ -2,24 +2,28 @@
 #include "Arduino.h"
 #include "Adafruit_BMP280.h"
 #include "Adafruit_BME280.h"
+#include "SFE_BMP180.h"
 #include <Wire.h>
 
-#define DHT_PIN_SENSOR 0    //s   - D1 | Digital 1 = PIN 5, Digital 3 = PIN 0
+#define DHT_PIN_SENSOR 0    //dat - D1 | Digital 1 = PIN 5, Digital 3 = PIN 0
 #define BMP_PIN_SCL 14      //scl - D5
 #define BMP_PIN_SDA 12      //sda - D6
 #define BMP_PIN_CSB 13      //csb - D7
 #define BMP_PIN_SDO 15      //sdo - D8
 #define BME_ADDR_I2C 0x76   //0x76
 
-#define DHT_ENABLED false   //! IMPORTANT !- TOGGLE DHT because D1 pin to be used by LCD
-#define BMP_ENABLED false   //! IMPORTANT !- TOGGLE BMP and BME because of the SCL and SDA PINS on D5 and D6 respectively
-#define BME_ENABLED true    //! IMPORTANT !- TOGGLE BMP and BME because of the SCL and SDA PINS on D5 and D6 respectively
+#define DHT_ENABLED true     //! IMPORTANT !- TOGGLE DHT because D1 pin to be used by LCD
+#define BMP_ENABLED false    //! IMPORTANT !- TOGGLE 
+#define BME_ENABLED false    //! IMPORTANT !- TOGGLE 
+#define BMPSFE_ENABLED true  //! IMPORTANT !- TOGGLE 
 
 ConfigurableSerial smSerial;
 
 dht dhtSensor;
-Adafruit_BMP280 bmpSensor(BMP_PIN_CSB, BMP_PIN_SDA, BMP_PIN_SDO, BMP_PIN_SCL);       //IF USE BMP
-Adafruit_BME280 bmeSensor;                                                           //IF USE BME
+SFE_BMP180      bmpSensor_sfe;                                                       //IF USE SFE BME LIBRARY 
+Adafruit_BMP280 bmpSensor(BMP_PIN_CSB, BMP_PIN_SDA, BMP_PIN_SDO, BMP_PIN_SCL);       //IF USE BMP, 6 PINS
+Adafruit_BME280 bmeSensor;                                                           //IF USE ADAFRUIT BME LIBRARY 
+
 
 //https://links2004.github.io/Arduino/d9/d4b/class_two_wire.html#a4c7daf378c06e5e72762e1bd3d5937b6
 TwoWire BME_I2C_TWOWIRE;    //Example of using another instance of WIRE to utilize other PINS.
@@ -47,6 +51,15 @@ void SensorManager::Begin(int sclPIN, int sdaPIN, boolean enabled) {
   smSerial.Out("--- SensorManager DHT_ENABLED", DHT_ENABLED ? "ENABLED" : "DISABLED");
   smSerial.Out("--- SensorManager BMP_ENABLED", BMP_ENABLED ? "ENABLED" : "DISABLED");
   smSerial.Out("--- SensorManager BME_ENABLED", BME_ENABLED ? "ENABLED" : "DISABLED");
+
+  if (BMPSFE_ENABLED) { //IF USE BMP180 SFE
+    if (!bmpSensor_sfe.begin()) {
+      smSerial.Out("-- SensorManager bmpSensor: Error - Could not find a valid BMP sensor");
+    } else {
+      smSerial.Out("-- SensorManager bmpSensor: Started!");
+    }
+  }
+
 
   if (BMP_ENABLED) { //IF USE BMP
     if (!bmpSensor.begin()) {
@@ -79,6 +92,12 @@ void SensorManager::ProcessSensors() {
   }
 
   smSerial.Out("-- SensorManager ProcessSensors");
+
+  if (BMPSFE_ENABLED) {
+    smSerial.Out("-- SensorManager ProcessSensors - Use BMP180 SFE");
+    Temperature = bmpSensor_sfe.getTemperatureC(); //getTemperatureF //(C/F)
+    Pressure = bmpSensor_sfe.getPressure();
+  }
 
   if (DHT_ENABLED) {
     smSerial.Out("-- SensorManager ProcessSensors - Use DHT11");
