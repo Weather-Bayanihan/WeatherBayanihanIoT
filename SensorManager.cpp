@@ -5,17 +5,17 @@
 #include "SFE_BMP180.h"
 #include <Wire.h>
 
-#define DHT_PIN_SENSOR 0    //dat - D1 | Digital 1 = PIN 5, Digital 3 = PIN 0
-#define BMP_PIN_SCL 14      //scl - D5
-#define BMP_PIN_SDA 12      //sda - D6
-#define BMP_PIN_CSB 13      //csb - D7
-#define BMP_PIN_SDO 15      //sdo - D8
-#define BME_ADDR_I2C 0x76   //0x76
+#define DHT_PIN_SENSOR 0      //dat - D1 | Digital 1 = PIN 5, Digital 3 = PIN 0
+#define BMP_PIN_SCL 14        //scl - D5
+#define BMP_PIN_SDA 12        //sda - D6
+#define BMP_PIN_CSB 13        //csb - D7
+#define BMP_PIN_SDO 15        //sdo - D8
+#define BME_ADDR_I2C 0x76     //0x76
 
-#define DHT_ENABLED true     //! IMPORTANT !- TOGGLE DHT because D1 pin to be used by LCD
-#define BMP_ENABLED false    //! IMPORTANT !- TOGGLE 
-#define BME_ENABLED false    //! IMPORTANT !- TOGGLE 
-#define BMPSFE_ENABLED true  //! IMPORTANT !- TOGGLE 
+#define DHT_ENABLED false     //! IMPORTANT !- TOGGLE  - DHT because D1 pin to be used by LCD
+#define BMP_ENABLED false     //! IMPORTANT !- TOGGLE - BMP 280 6 PINS
+#define BME_ENABLED true      //! IMPORTANT !- TOGGLE - BME 4 PINS
+#define BMPSFE_ENABLED false  //! IMPORTANT !- TOGGLE - BMP 180 4 PINS
 
 ConfigurableSerial smSerial;
 
@@ -39,7 +39,7 @@ void SensorManager::Begin(int sclPIN, int sdaPIN, boolean enabled) {
   }
   
   smSerial.Out("- SensorManager Starting....");
-  smSerial.Out("--- SensorManager _enabled", _enabled ? "ENABLED" : "DISABLED");
+  smSerial.Out("--- SensorManager _enabled", String(_enabled));
   smSerial.Out("--- SensorManager DHT_PIN_SENSOR", DHT_PIN_SENSOR);
   smSerial.Out("--- SensorManager BMP_PIN_SCL", BMP_PIN_SCL);
   smSerial.Out("--- SensorManager BMP_PIN_SDA", BMP_PIN_SDA);
@@ -48,15 +48,15 @@ void SensorManager::Begin(int sclPIN, int sdaPIN, boolean enabled) {
   smSerial.Out("--- SensorManager BME_ADDR_I2C", BME_ADDR_I2C);
   smSerial.Out("--- SensorManager sclPIN", _sclPIN);
   smSerial.Out("--- SensorManager sdaPIN", _sdaPIN);
-  smSerial.Out("--- SensorManager DHT_ENABLED", DHT_ENABLED ? "ENABLED" : "DISABLED");
-  smSerial.Out("--- SensorManager BMP_ENABLED", BMP_ENABLED ? "ENABLED" : "DISABLED");
-  smSerial.Out("--- SensorManager BME_ENABLED", BME_ENABLED ? "ENABLED" : "DISABLED");
+  smSerial.Out("--- SensorManager DHT_ENABLED", String(DHT_ENABLED));
+  smSerial.Out("--- SensorManager BMP_ENABLED", String(BMP_ENABLED));
+  smSerial.Out("--- SensorManager BME_ENABLED", String(BME_ENABLED));
 
   if (BMPSFE_ENABLED) { //IF USE BMP180 SFE
     if (!bmpSensor_sfe.begin()) {
-      smSerial.Out("-- SensorManager bmpSensor: Error - Could not find a valid BMP sensor");
+      smSerial.Out("-- SensorManager bmpSensor SFE: Error - Could not find a valid BMP SFE sensor");
     } else {
-      smSerial.Out("-- SensorManager bmpSensor: Started!");
+      smSerial.Out("-- SensorManager bmpSensor SFE: Started!");
     }
   }
 
@@ -108,7 +108,9 @@ void SensorManager::ProcessSensors() {
 
   if (BMP_ENABLED) {
     smSerial.Out("-- SensorManager ProcessSensors - Use BMP180");
-    Temperature = bmpSensor.readTemperature();
+    if(DHT_ENABLED == false){
+      Temperature = bmpSensor.readTemperature();  
+    }
     Pressure = bmpSensor.readPressure() / 100;
   }
 
