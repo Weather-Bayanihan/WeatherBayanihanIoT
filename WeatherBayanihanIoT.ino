@@ -25,14 +25,15 @@
 #define global_wifi_nonblocking_interval 3000     //3000
 #define global_wifi_enablereconfiguration true    //true
 #define global_wifilcd_nonblocking_interval 15000 //15000
-#define global_lcd_enabled false                  //true
+#define global_lcd_enabled true                   //true
 #define global_sensor_enabled true                //true
 #define global_sensor_blocking_delay 3000         //3000
-#define global_sensor_nonblocking_interval 15000  //15000
+#define global_sensor_nonblocking_interval 600000 //15000 = 15 Secs (Debug), 600000 = 10 Mins
 #define global_http_enabled true                  //ALLOW IOT TO SEND
 #define global_http_blocking_delay 3000
-#define global_http_nonblocking_interval 1800000  //15000 = 15 Secs (Debug), 1800000 = 30 Mins, 3600000 = 60 Mins
+#define global_http_nonblocking_interval 1800000  //15000
                                                   //RATE OF SENDING VIA IOT
+                                                  //15000 = 15 Secs (Debug), 600000 = 10 Mins, 1800000 = 30 Mins, 3600000 = 60 Mins
 
 ConfigurableSerial serialLogger;
 SimpleWifiManager simpleWifiManager;
@@ -70,7 +71,8 @@ void setup() {
   simpleLCDManager.ClearScreen();
   serialLogger.Out("- Setup Complete!");
 
-  ProcessSensors();
+  ProcessSensors(); //PROCESS ONCE ON STARTUP
+  SendData();       //SEND ONCE ON STARTUP
 }
 
 
@@ -91,14 +93,29 @@ void loop() {
 
   if (sensor_loopCurrentTime - sensor_loopPreviousTime > global_sensor_nonblocking_interval) {
     sensor_loopPreviousTime = sensor_loopCurrentTime;
-
     ProcessSensors();
-
   }
 
   if (http_loopCurrentTime - http_loopPreviousTime > global_http_nonblocking_interval) {
     http_loopPreviousTime = http_loopCurrentTime;
-    if (simpleWifiManager.CheckConnection() && sensorManager.CheckSensors()) {
+    SendData();
+  }
+}
+
+void ProcessSensors() {
+  sensorManager.ProcessSensors();
+  if (sensorManager.CheckSensors()) {
+    simpleLCDManager.PrintText(1, "Temperature:  ", sensorManager.Temperature);
+    simpleLCDManager.PrintIcon(1, 3); //Degrees
+    simpleLCDManager.PrintText(2, "Humidity:     ", sensorManager.Humidity);
+    simpleLCDManager.PrintIcon(2, 4); //Percent
+    simpleLCDManager.PrintText(3, "Pressure:   ", sensorManager.Pressure);
+    simpleLCDManager.PrintIcon(3, 7); //hPa
+  }
+}
+
+void SendData(){
+   if (simpleWifiManager.CheckConnection() && sensorManager.CheckSensors()) {
       String http_device_stationId = simpleWifiManager.GetStationId();
       if (http_device_stationId != "") {
 
@@ -115,17 +132,4 @@ void loop() {
     else {
       serialLogger.Out("- Connection is out or Sensors are out. Skipping Sending");
     }
-  }
-}
-
-void ProcessSensors() {
-  sensorManager.ProcessSensors();
-  if (sensorManager.CheckSensors()) {
-    simpleLCDManager.PrintText(1, "Temperature:  ", sensorManager.Temperature);
-    simpleLCDManager.PrintIcon(1, 3); //Degrees
-    simpleLCDManager.PrintText(2, "Humidity:     ", sensorManager.Humidity);
-    simpleLCDManager.PrintIcon(2, 4); //Percent
-    simpleLCDManager.PrintText(3, "Pressure:   ", sensorManager.Pressure);
-    simpleLCDManager.PrintIcon(3, 7); //hPa
-  }
 }
