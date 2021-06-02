@@ -10,7 +10,7 @@ class WeatherBayanihanIoTClientManager {
     void ConfigureLogging(ConfigurableSerial configurableSerial);
     boolean Send(String deviceId, String temperature, String pressure, String humidity);
     boolean Initialized = false;
-    String sslFingerPrint = "F2:D3:FE:3C:D0:0C:8C:B9:D9:CF:91:1A:8E:33:87:A0:0D:42:49:50";
+    String sslFingerPrint = "65:BF:84:DF:3C:BC:7D:61:9A:1C:C1:BA:7F:11:65:4B:A7:30:95:9F";
     String serverAddress = "https://api.weather-bayanihan.ph/api/v1.0/Weather";
   
   private:
