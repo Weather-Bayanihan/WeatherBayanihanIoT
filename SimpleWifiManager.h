@@ -23,6 +23,9 @@ class SimpleWifiManager {
     boolean CheckConnection();
     String CheckConnectionName();
     String GetStationId();
+    String wiFi_station_id = "";
+    boolean wiFiConnectWithRetry(String wifiSsid, String wifiPassword, int retryCount, int retryDelay);
+
   private:
   
     boolean _enabled;
@@ -35,7 +38,7 @@ class SimpleWifiManager {
     int global_serial_baud = 115200;
     boolean global_wifi_ReconfigurationEnabled = true;
 
-    String wiFi_station_id = "";
+
     
     String wiFi_ap_ssid = "IoT Device N";
     String wiFi_ap_passkey = "hello123";
@@ -76,7 +79,7 @@ class SimpleWifiManager {
     void webServerSend(String htmlPage, int statusCode);
     String webServerCurrentConnection();
     String wifiNetworkScan();
-    boolean wiFiConnectWithRetry(String wifiSsid, String wifiPassword, int retryCount, int retryDelay);
+
     void wifiResetSoftAp(boolean reconfigure);
     void wifiConfigurationSave();
     void wifiConfigurationRead();
